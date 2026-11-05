@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10243a">
+<link rel="manifest" href="manifest.json">
+<title>Engineering Logbook</title>
+<style>
+:root{--navy:#10243a;--blue:#1769aa;--cyan:#22b8cf;--bg:#f2f5f9;--card:#fff;--text:#182536;--muted:#66768a;--line:#dce4ec;--green:#16845b;--red:#c43d4b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{background:linear-gradient(135deg,#10243a,#174b73);color:#fff;padding:22px 16px 18px}
+.header-inner{max-width:1100px;margin:auto}header h1{font-size:clamp(24px,5vw,34px);letter-spacing:.3px;margin:0;font-weight:800}header p{margin:6px 0 0;color:#c8d8e8;font-size:14px}
+nav{display:flex;gap:8px;overflow-x:auto;padding:12px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav button{border:0;background:#edf2f7;color:#31465b;padding:10px 14px;border-radius:11px;font-weight:700;white-space:nowrap}
+nav button.active{background:var(--navy);color:#fff}
+main{max-width:1100px;margin:18px auto;padding:0 12px 36px}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 12px #14283c08}
+.card h2,.card h3{margin:0 0 12px}.card h2{font-size:19px}.card h3{font-size:16px}
+.stat{font-size:30px;font-weight:800;color:var(--blue);margin-top:4px}
+label{display:block;font-size:13px;font-weight:700;color:#43566b;margin:10px 0 5px}
+input,select,textarea{width:100%;border:1px solid #ccd7e2;border-radius:10px;padding:10px 11px;font:inherit;background:#fff;color:var(--text)}
+textarea{min-height:76px;resize:vertical}
+button{cursor:pointer}
+.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:800;background:var(--blue);color:white;margin-top:12px}
+.btn.secondary{background:#e8eef5;color:#253d55}.btn.danger{background:var(--red)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{background:#f4f7fa;color:#40556b}
+.table-wrap{overflow-x:auto}.muted{color:var(--muted);font-size:13px}.empty{padding:18px;text-align:center;color:var(--muted)}
+.pill{display:inline-block;background:#e7f4fc;color:#145987;border-radius:20px;padding:4px 8px;font-size:12px;font-weight:800}
+footer{text-align:center;color:var(--muted);padding:20px;font-size:12px}
+@media(max-width:600px){header{padding:18px 14px}nav{padding:9px}nav button{padding:9px 11px}table{min-width:650px}}
+</style>
+</head>
+<body>
+<header><div class="header-inner"><h1>⚙ Engineering Logbook</h1><p>Maintenance • Breakdown • Factory Downtime • Standby • Overtime</p></div></header>
+<nav id="tabs">
+<button class="active" data-page="dashboard">Dashboard</button>
+<button data-page="breakdowns">Breakdowns</button>
+<button data-page="downtime">Factory Downtime</button>
+<button data-page="standby">Standby</button>
+<button data-page="overtime">Overtime</button>
+<button data-page="reports">Monthly Reports</button>
+<button data-page="assistant">Voice Assistant</button>
+</nav>
+<main>
+<section class="page active" id="dashboard">
+<div class="grid">
+<div class="card"><h3>Breakdowns Logged</h3><div class="stat" id="statBreak">0</div><div class="muted">Total breakdown records</div></div>
+<div class="card"><h3>Downtime Events</h3><div class="stat" id="statDown">0</div><div class="muted">Factory downtime records</div></div>
+<div class="card"><h3>Standby Weeks</h3><div class="stat" id="statStandby">0</div><div class="muted">Standby entries</div></div>
+<div class="card"><h3>Overtime Hours</h3><div class="stat" id="statOT">0.0</div><div class="muted">Total recorded hours</div></div>
+</div>
+<div class="card" style="margin-top:14px"><h2>Quick overview</h2><p class="muted">Your records are stored in this browser on this device. Export backups regularly, especially before changing phones or clearing Chrome data.</p><button class="btn" onclick="exportData()">Export backup (JSON)</button><label for="importFile">Restore backup</label><input id="importFile" type="file" accept=".json,application/json" onchange="importData(event)"></div>
+</section>
+<section class="page" id="breakdowns">
+<div class="grid"><div class="card"><h2>Log Breakdown</h2>
+<form id="breakForm">
+<div class="row"><div><label>Date</label><input type="date" id="bDate" required></div><div><label>Call time</label><input type="time" id="bStart" required></div></div>
+<label>Plant / Area</label><input id="bArea" placeholder="e.g. Boiler plant, packaging line" required>
+<label>Equipment / Machine</label><input id="bEquipment" placeholder="Equipment name or number" required>
+<label>Fault / Breakdown description</label><textarea id="bFault" required></textarea>
+<label>Work performed / Findings</label><textarea id="bWork"></textarea>
+<div class="row"><div><label>Breakdown completed date</label><input type="date" id="bEndDate"></div><div><label>Completed time</label><input type="time" id="bEnd"></div></div>
+<label>Parts / Materials used</label><input id="bParts">
+<label>Technician / Team</label><input id="bTech" placeholder="Name(s)">
+<label>Status</label><select id="bStatus"><option>Completed</option><option>In progress</option><option>Awaiting parts</option><option>Monitoring</option></select>
+<button class="btn" type="submit">Save Breakdown</button></form></div>
+<div class="card"><h2>Breakdown Records</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Area / Equipment</th><th>Call → completed</th><th>Fault / Work</th><th>Status</th><th></th></tr></thead><tbody id="breakRows"></tbody></table></div></div></div>
+</section>
+<section class="page" id="downtime">
+<div class="grid"><div class="card"><h2>Log Factory Downtime</h2><form id="downForm">
+<div class="row"><div><label>Date</label><input type="date" id="dDate" required></div><div><label>Start time</label><input type="time" id="dStart" required></div></div>
+<label>Plant / Production area</label><input id="dArea" required>
+<label>Machine / Line</label><input id="dMachine" required>
+<label>Downtime reason / Category</label><select id="dReason"><option>Mechanical failure</option><option>Electrical / PLC fault</option><option>Utility / Services</option><option>Planned maintenance</option><option>Operator / Process</option><option>Other</option></select>
+<label>Description</label><textarea id="dDesc" required></textarea>
+<div class="row"><div><label>End date</label><input type="date" id="dEndDate"></div><div><label>End time</label><input type="time" id="dEnd"></div></div>
+<label>Corrective action / Notes</label><textarea id="dAction"></textarea>
+<button class="btn" type="submit">Save Downtime</button></form></div>
+<div class="card"><h2>Downtime Records</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Area / Machine</th><th>Time</th><th>Reason / Description</th><th>Duration</th><th></th></tr></thead><tbody id="downRows"></tbody></table></div></div></div>
+</section>
+<section class="page" id="standby">
+<div class="grid"><div class="card"><h2>Standby Week</h2><p class="muted">Standby is recorded as one full week, Monday to Monday.</p><form id="standForm">
+<label>Standby start (Monday)</label><input type="date" id="sStart" required>
+<label>Standby end (following Monday)</label><input type="date" id="sEnd" required>
+<label>Month / Payroll period</label><input type="month" id="sMonth" required>
+<label>Notes / Call-outs during standby</label><textarea id="sNotes"></textarea>
+<button class="btn" type="submit">Save Standby Week</button></form></div>
+<div class="card"><h2>Standby Records</h2><div class="table-wrap"><table><thead><tr><th>Week</th><th>Period</th><th>Notes</th><th></th></tr></thead><tbody id="standRows"></tbody></table></div></div></div>
+</section>
+<section class="page" id="overtime">
+<div class="grid"><div class="card"><h2>Log Overtime</h2><form id="otForm">
+<div class="row"><div><label>Date</label><input type="date" id="oDate" required></div><div><label>Start time</label><input type="time" id="oStart" required></div><div><label>End time</label><input type="time" id="oEnd" required></div></div>
+<label>Plant / Area</label><input id="oArea" required>
+<label>Reason / Work performed</label><textarea id="oReason" required></textarea>
+<label>Overtime hours (auto-calculated; adjust if needed)</label><input type="number" id="oHours" min="0" step="0.25" required>
+<label>Approval / Supervisor</label><input id="oApproval">
+<button class="btn" type="submit">Save Overtime</button></form></div>
+<div class="card"><h2>Overtime Records</h2><div class="table-wrap"><table><thead><tr><th>Date</th><th>Time</th><th>Area / Reason</th><th>Hours</th><th></th></tr></thead><tbody id="otRows"></tbody></table></div></div></div>
+</section>
+<section class="page" id="reports">
+<div class="card"><h2>Monthly Report</h2><label>Select month</label><input type="month" id="reportMonth"><button class="btn" onclick="makeReport()">Generate Report</button><button class="btn secondary" onclick="printReport()">Print / Save PDF</button><div id="reportOutput"></div></div>
+</section>
+<section class="page" id="assistant">
+<div class="card"><h2>Voice Assistant</h2><p class="muted">A browser-based voice helper. It prefers an available male English voice; voice options vary by device and Chrome installation.</p>
+<label>Voice</label><select id="voiceSelect"></select><label>Ask or say a command</label><input id="voiceText" placeholder="e.g. show breakdowns, open overtime, summarize records">
+<div class="row"><button class="btn" onclick="speakText(document.getElementById('voiceText').value)">Speak</button><button class="btn secondary" onclick="listen()">🎙 Listen</button><button class="btn secondary" onclick="runCommand()">Run command</button></div><p id="voiceStatus" class="muted" aria-live="polite"></p>
+<p class="muted">Voice recognition support depends on browser permissions. The assistant does not connect to an advanced conversational AI service.</p></div>
+</section>
+</main>
+<footer>Engineering Logbook • Recreated version • Data stays in this browser unless you export it.</footer>
+<script>
+const KEY='engineeringLogbookV3';
+let db={breakdowns:[],downtime:[],standby:[],overtime:[]};
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||'{}');db={...db,...x};}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render(); }
+function today(){return new Date().toISOString().slice(0,10)}
+['bDate','dDate','oDate'].forEach(id=>document.getElementById(id).value=today());
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.page).classList.add('active')});
+function val(id){return document.getElementById(id).value}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function duration(date1,time1,date2,time2){if(!date1||!time1||!date2||!time2)return '';let a=new Date(date1+'T'+time1),b=new Date(date2+'T'+time2);let mins=(b-a)/60000;if(mins<0)return 'Check end time';return (mins/60).toFixed(2)+' h'}
+function del(type,i){if(confirm('Delete this record?')){db[type].splice(i,1);save()}}
+document.getElementById('breakForm').onsubmit=e=>{e.preventDefault();db.breakdowns.unshift({date:val('bDate'),start:val('bStart'),area:val('bArea'),equipment:val('bEquipment'),fault:val('bFault'),work:val('bWork'),endDate:val('bEndDate'),end:val('bEnd'),parts:val('bParts'),tech:val('bTech'),status:val('bStatus')});e.target.reset();document.getElementById('bDate').value=today();save()};
+document.getElementById('downForm').onsubmit=e=>{e.preventDefault();db.downtime.unshift({date:val('dDate'),start:val('dStart'),area:val('dArea'),machine:val('dMachine'),reason:val('dReason'),desc:val('dDesc'),endDate:val('dEndDate'),end:val('dEnd'),action:val('dAction')});e.target.reset();document.getElementById('dDate').value=today();save()};
+document.getElementById('standForm').onsubmit=e=>{e.preventDefault();db.standby.unshift({start:val('sStart'),end:val('sEnd'),month:val('sMonth'),notes:val('sNotes')});e.target.reset();save()};
+document.getElementById('otStart').onchange=document.getElementById('oStart').onchange=calcOT;
+document.getElementById('oEnd').onchange=calcOT;document.getElementById('oDate').onchange=calcOT;
+function calcOT(){let s=val('oStart'),e=val('oEnd');if(s&&e){let [sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number),m=(eh*60+em)-(sh*60+sm);if(m<0)m+=1440;document.getElementById('oHours').value=(m/60).toFixed(2)}}
+document.getElementById('otForm').onsubmit=e=>{e.preventDefault();db.overtime.unshift({date:val('oDate'),start:val('oStart'),end:val('oEnd'),area:val('oArea'),reason:val('oReason'),hours:Number(val('oHours')),approval:val('oApproval')});e.target.reset();document.getElementById('oDate').value=today();save()};
+function render(){
+document.getElementById('statBreak').textContent=db.breakdowns.length;document.getElementById('statDown').textContent=db.downtime.length;document.getElementById('statStandby').textContent=db.standby.length;document.getElementById('statOT').textContent=db.overtime.reduce((a,x)=>a+(Number(x.hours)||0),0).toFixed(1);
+document.getElementById('breakRows').innerHTML=db.breakdowns.map((x,i)=>`<tr><td>${esc(x.date)}</td><td>${esc(x.area)}<br><b>${esc(x.equipment)}</b></td><td>${esc(x.start)} → ${esc(x.endDate||x.date)} ${esc(x.end)}</td><td>${esc(x.fault)}<br><span class="muted">${esc(x.work)}</span></td><td><span class="pill">${esc(x.status)}</span></td><td><button class="btn danger" onclick="del('breakdowns',${i})">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No breakdown records yet.</td></tr>';
+document.getElementById('downRows').innerHTML=db.downtime.map((x,i)=>`<tr><td>${esc(x.date)}</td><td>${esc(x.area)}<br><b>${esc(x.machine)}</b></td><td>${esc(x.start)} → ${esc(x.endDate||x.date)} ${esc(x.end)}</td><td>${esc(x.reason)}<br>${esc(x.desc)}<br><span class="muted">${esc(x.action)}</span></td><td>${duration(x.date,x.start,x.endDate||x.date,x.end)}</td><td><button class="btn danger" onclick="del('downtime',${i})">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="empty">No downtime records yet.</td></tr>';
+document.getElementById('standRows').innerHTML=db.standby.map((x,i)=>`<tr><td>${esc(x.start)} → ${esc(x.end)}</td><td>${esc(x.month)}</td><td>${esc(x.notes)}</td><td><button class="btn danger" onclick="del('standby',${i})">Delete</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">No standby records yet.</td></tr>';
+document.getElementById('otRows').innerHTML=db.overtime.map((x,i)=>`<tr><td>${esc(x.date)}</td><td>${esc(x.start)} → ${esc(x.end)}</td><td>${esc(x.area)}<br>${esc(x.reason)}<br><span class="muted">${esc(x.approval)}</span></td><td>${Number(x.hours||0).toFixed(2)}</td><td><button class="btn danger" onclick="del('overtime',${i})">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No overtime records yet.</td></tr>';
+}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='engineering-logbook-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(ev){let f=ev.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.breakdowns||!x.downtime||!x.standby||!x.overtime)throw Error();db=x;save();alert('Backup restored.')}catch(e){alert('Invalid backup file.')}};r.readAsText(f)}
+function makeReport(){let m=val('reportMonth');if(!m){alert('Select a month first');return}let b=db.breakdowns.filter(x=>x.date.startsWith(m)),d=db.downtime.filter(x=>x.date.startsWith(m)),s=db.standby.filter(x=>x.month===m),o=db.overtime.filter(x=>x.date.startsWith(m));let hrs=o.reduce((a,x)=>a+(Number(x.hours)||0),0);document.getElementById('reportOutput').innerHTML=`<h3>Report: ${esc(m)}</h3><p><b>Breakdowns:</b> ${b.length} &nbsp; <b>Downtime events:</b> ${d.length} &nbsp; <b>Standby weeks:</b> ${s.length} &nbsp; <b>Overtime:</b> ${hrs.toFixed(2)} hours (${o.length} entries)</p><h3>Breakdown summary</h3>${b.map(x=>`<p><b>${esc(x.date)} | ${esc(x.area)} | ${esc(x.equipment)}</b><br>${esc(x.fault)} — ${esc(x.work)} <span class="muted">Status: ${esc(x.status)}</span></p>`).join('')||'<p>No breakdowns this month.</p>'}<h3>Downtime summary</h3>${d.map(x=>`<p><b>${esc(x.date)} | ${esc(x.area)} | ${esc(x.machine)}</b><br>${esc(x.reason)}: ${esc(x.desc)} <span class="muted">${duration(x.date,x.start,x.endDate||x.date,x.end)}</span></p>`).join('')||'<p>No downtime this month.</p>'}<h3>Standby and Overtime</h3><p>${s.map(x=>esc(x.start)+' → '+esc(x.end)+' '+esc(x.notes)).join('<br>')||'No standby records.'}</p>${o.map(x=>`<p>${esc(x.date)} ${esc(x.start)}–${esc(x.end)}: ${Number(x.hours).toFixed(2)} h — ${esc(x.reason)}</p>`).join('')||'<p>No overtime records.</p>'}`}
+function printReport(){if(!document.getElementById('reportOutput').innerHTML){makeReport()}window.print()}
+let voices=[];
+function loadVoices(){voices=speechSynthesis.getVoices();let sel=document.getElementById('voiceSelect');sel.innerHTML='';let ordered=voices.slice().sort((a,b)=>{let am=/male|david|mark|daniel|guy|james|fred/i.test(a.name)?0:1,bm=/male|david|mark|daniel|guy|james|fred/i.test(b.name)?0:1;return am-bm});ordered.forEach(v=>{let o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';sel.appendChild(o)});let pick=ordered.find(v=>/male|david|mark|daniel|guy|james|fred/i.test(v.name)&&/^en/i.test(v.lang))||ordered.find(v=>/^en/i.test(v.lang));if(pick)sel.value=pick.name}
+if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function speakText(t){if(!t){t='Engineering Logbook ready. What would you like to do?'}if(!('speechSynthesis' in window)){alert('Text-to-speech is not supported in this browser.');return}speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t),v=voices.find(x=>x.name===val('voiceSelect'));if(v)u.voice=v;u.rate=.95;u.pitch=.9;speechSynthesis.speak(u)}
+function listen(){let R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){document.getElementById('voiceStatus').textContent='Voice recognition is not supported in this browser. Try Chrome and allow microphone permission.';return}let r=new R();r.lang='en-ZA';r.onresult=e=>{document.getElementById('voiceText').value=e.results[0][0].transcript;document.getElementById('voiceStatus').textContent='Heard: '+e.results[0][0].transcript};r.onerror=e=>document.getElementById('voiceStatus').textContent='Recognition error: '+e.error;r.start()}
+function runCommand(){let t=val('voiceText').toLowerCase();let target=t.includes('break')?'breakdowns':t.includes('down')?'downtime':t.includes('standby')?'standby':t.includes('overtime')?'overtime':t.includes('report')?'reports':'dashboard';document.querySelector(`[data-page="${target}"]`).click();speakText('Opening '+target.replace(/s$/,'')+' section.')}
+load();render();
+</script>
+</body></html>
